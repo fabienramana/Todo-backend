@@ -20,7 +20,7 @@ export class TodosService {
   }
 
   findAll(): Promise<Todo[]> {
-    return this.todoRepository.find();
+    return this.getAllRecordsDesc();
   }
 
   findOne(id: string): Promise<Todo> {
