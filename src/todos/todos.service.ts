@@ -5,7 +5,6 @@ import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { Todo } from './entities/todo.entity';
 import {v4 as uuidv4} from 'uuid';
-import { isEmpty } from 'rxjs';
 
 @Injectable()
 export class TodosService {
@@ -35,8 +34,11 @@ export class TodosService {
     return `This action updates a #${id} todo`;
   }
 
-  async remove(id: number): Promise<void> {
-    await this.todoRepository.delete(id);
+  async remove(id: string): Promise<void> {
+    const deleteResult = await this.todoRepository.delete(id);
+    if(deleteResult.affected !== 1){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
   }
 
   async mapTo(createTodoDto: CreateTodoDto): Promise<Todo>{
