@@ -41,6 +41,21 @@ export class TodosService {
     }
   }
 
+  async deleteByCompleted(completed: string) {
+    
+    if (completed === undefined || completed.toLowerCase() === "false"){
+      console.log("here")
+      const getAllRecords = await this.getAllRecordsDesc()
+      this.todoRepository.remove(getAllRecords)
+    }
+    else if(completed.toLowerCase() === "true"){
+      this.todoRepository.delete({completed: true})
+    }
+    else{
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+  }
+
   async mapTo(createTodoDto: CreateTodoDto): Promise<Todo>{
     let newuuid: string = uuidv4();
     const lastOrder: number = await this.getLastOrder().then()
