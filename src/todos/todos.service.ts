@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateTodoDto } from './dto/create-todo.dto';
@@ -14,7 +14,7 @@ export class TodosService {
     private todoRepository: Repository<Todo>
   ){}
 
-  async create(createTodoDto: CreateTodoDto) {
+  async create(createTodoDto: CreateTodoDto): Promise<Todo> {
     const todoToSave: Todo = await this.mapTo(createTodoDto)
     return this.todoRepository.save(todoToSave);
   }
@@ -23,8 +23,12 @@ export class TodosService {
     return this.getAllRecordsDesc();
   }
 
-  findOne(id: string): Promise<Todo> {
-    return this.todoRepository.findOneBy({id});
+  async findOne(id: string): Promise<Todo> {
+    const todo: Todo =  await this.todoRepository.findOneBy({id});
+    if(todo === null){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return todo;
   }
 
   update(id: number, updateTodoDto: UpdateTodoDto) {
