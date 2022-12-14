@@ -4,18 +4,18 @@ import { Repository } from "typeorm";
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { Todo } from './entities/todo.entity';
-import { TodoMapper } from './dto/todo-mapper';
+import {v4 as uuidv4} from 'uuid';
+import { isEmpty } from 'rxjs';
 
 @Injectable()
 export class TodosService {
   constructor(
     @InjectRepository(Todo)
-    private todoRepository: Repository<Todo>,
-    private todoMapper: TodoMapper
+    private todoRepository: Repository<Todo>
   ){}
 
-  create(createTodoDto: CreateTodoDto) {
-    const todoToSave: Todo = this.todoMapper.mapTo(createTodoDto)
+  async create(createTodoDto: CreateTodoDto) {
+    const todoToSave: Todo = await this.mapTo(createTodoDto)
     return this.todoRepository.save(todoToSave);
   }
 
@@ -33,5 +33,37 @@ export class TodosService {
 
   async remove(id: number): Promise<void> {
     await this.todoRepository.delete(id);
+  }
+
+  async mapTo(createTodoDto: CreateTodoDto): Promise<Todo>{
+    let newuuid: string = uuidv4();
+    const lastOrder: number = await this.getLastOrder().then()
+
+    const todoToSave: Todo = {
+        id: newuuid,
+        order: lastOrder,
+        title: createTodoDto.title,
+        completed: false
+    }
+
+    return todoToSave;
+  }
+
+  async getLastOrder(): Promise<number>{
+    const allRecordsPromise = this.getAllRecordsDesc()
+    const allRecords: Todo[] =  await allRecordsPromise.then()
+
+    if(allRecords.length === 0){
+      return 1;
+    }
+    return allRecords[0].order+1
+  }
+
+  getAllRecordsDesc(): Promise<Todo[]> {
+    return this.todoRepository.find({
+      order: {
+          order: "DESC",
+      },
+  })
   }
 }

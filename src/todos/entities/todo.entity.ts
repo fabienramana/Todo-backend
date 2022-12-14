@@ -1,11 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Todo {
-  @Column()
+  @PrimaryColumn()
   id: string;
 
-  @PrimaryGeneratedColumn()
+  @Column({ unique: true })
   order: number;
 
   @Column()
