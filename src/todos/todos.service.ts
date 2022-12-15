@@ -5,6 +5,7 @@ import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { Todo } from './entities/todo.entity';
 import {v4 as uuidv4} from 'uuid';
+import { UpdateTodoDto } from './dto/update-todo.dto';
 
 @Injectable()
 export class TodosService {
@@ -40,13 +41,29 @@ export class TodosService {
       const order = updatePartialTodoDto.order
       const todo: Todo = await this.todoRepository.findOneBy({
         order: order as number,
-    })
+      })
       if(todo !== null){
         throw new HttpException('Conflict', HttpStatus.CONFLICT);
       }
     }
 
     this.todoRepository.update(id, updatePartialTodoDto);
+  }
+
+  async updateTotally(id: string, updateTotallyTodoDto: UpdateTodoDto) {
+    const todo: Todo =  await this.todoRepository.findOneBy({id});
+    if(todo === null){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    const order = updateTotallyTodoDto.order
+    const todoByOrder: Todo = await this.todoRepository.findOneBy({
+      order: order as number,
+    })
+    if(todoByOrder !== null){
+      throw new HttpException('Conflict', HttpStatus.CONFLICT);
+    }
+    this.todoRepository.update(id, updateTotallyTodoDto);
   }
 
   async remove(id: string): Promise<void> {

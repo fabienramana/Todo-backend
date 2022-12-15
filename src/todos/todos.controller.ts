@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query, Put
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
+import { UpdateTodoDto } from './dto/update-todo.dto';
 
 @Controller('todos')
 export class TodosController {
@@ -26,6 +27,11 @@ export class TodosController {
   @Patch(':id')
   updatePartialy(@Param('id') id: string, @Body() updatePartialTodoDto: UpdatePartialTodoDto) {
     return this.todosService.updatePartialy(id, updatePartialTodoDto);
+  }
+
+  @Put(':id')
+  updateTotally(@Param('id') id: string, @Body() updateTotallyTodoDto: UpdateTodoDto){
+    return this.todosService.updateTotally(id, updateTotallyTodoDto)
   }
 
   @Delete(':id')
