@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateTodoDto } from './dto/create-todo.dto';
-import { UpdateTodoDto } from './dto/update-todo.dto';
+import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { Todo } from './entities/todo.entity';
 import {v4 as uuidv4} from 'uuid';
 
@@ -30,8 +30,23 @@ export class TodosService {
     return todo;
   }
 
-  update(id: number, updateTodoDto: UpdateTodoDto) {
-    return `This action updates a #${id} todo`;
+  async updatePartialy(id: string, updatePartialTodoDto: UpdatePartialTodoDto) {
+    const todo: Todo =  await this.todoRepository.findOneBy({id});
+    if(todo === null){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    if("order" in updatePartialTodoDto){
+      const order = updatePartialTodoDto.order
+      const todo: Todo = await this.todoRepository.findOneBy({
+        order: order as number,
+    })
+      if(todo !== null){
+        throw new HttpException('Conflict', HttpStatus.CONFLICT);
+      }
+    }
+
+    this.todoRepository.update(id, updatePartialTodoDto);
   }
 
   async remove(id: string): Promise<void> {
@@ -44,7 +59,6 @@ export class TodosService {
   async deleteByCompleted(completed: string) {
     
     if (completed === undefined || completed.toLowerCase() === "false"){
-      console.log("here")
       const getAllRecords = await this.getAllRecordsDesc()
       this.todoRepository.remove(getAllRecords)
     }
