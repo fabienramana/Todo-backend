@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query, Put, HttpException, HttpStatus } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
@@ -20,24 +20,43 @@ export class TodosController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.todosService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const response =  await this.todosService.findOne(id);
+    if(response === null){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return response;
   }
 
   @Patch(':id')
-  updatePartialy(@Param('id') id: string, @Body() updatePartialTodoDto: UpdatePartialTodoDto) {
-    return this.todosService.updatePartialy(id, updatePartialTodoDto);
+  async updatePartialy(@Param('id') id: string, @Body() updatePartialTodoDto: UpdatePartialTodoDto) {
+    const todoResponse =  await this.todosService.updatePartialy(id, updatePartialTodoDto);
+    if(todoResponse === null){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    if(todoResponse !== undefined){
+      throw new HttpException('Conflict', HttpStatus.CONFLICT);
+    }
   }
 
   @Put(':id')
-  updateTotally(@Param('id') id: string, @Body() updateTotallyTodoDto: UpdateTodoDto){
-    return this.todosService.updateTotally(id, updateTotallyTodoDto)
+  async updateTotally(@Param('id') id: string, @Body() updateTotallyTodoDto: UpdateTodoDto){
+    const todoResponse = await this.todosService.updateTotally(id, updateTotallyTodoDto)
+    if(todoResponse === null){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    if(todoResponse !== undefined){
+      throw new HttpException('Conflict', HttpStatus.CONFLICT);
+    }
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string) {
-    return this.todosService.remove(id);
+  async remove(@Param('id') id: string) {
+    const deleteResult = await this.todosService.remove(id);
+    if(deleteResult.affected !== 1){
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
   }
 
   @Delete(':completed?')

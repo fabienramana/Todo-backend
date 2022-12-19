@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DeleteResult, Repository } from "typeorm";
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { Todo } from './entities/todo.entity';
@@ -25,35 +25,33 @@ export class TodosService {
 
   async findOne(id: string): Promise<Todo> {
     const todo: Todo =  await this.todoRepository.findOneBy({id});
-    if(todo === null){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
     return todo;
   }
 
-  async updatePartialy(id: string, updatePartialTodoDto: UpdatePartialTodoDto) {
+  async updatePartialy(id: string, updatePartialTodoDto: UpdatePartialTodoDto): Promise<Todo> {
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+      return todo;
     }
 
     if("order" in updatePartialTodoDto){
       const order = updatePartialTodoDto.order
-      const todo: Todo = await this.todoRepository.findOneBy({
+      console.log(order)
+      const todoByOrder: Todo = await this.todoRepository.findOneBy({
         order: order as number,
       })
-      if(todo !== null){
-        throw new HttpException('Conflict', HttpStatus.CONFLICT);
+      if(todoByOrder !== null){
+        return todoByOrder;
       }
     }
 
     this.todoRepository.update(id, updatePartialTodoDto);
   }
 
-  async updateTotally(id: string, updateTotallyTodoDto: UpdateTodoDto) {
+  async updateTotally(id: string, updateTotallyTodoDto: UpdateTodoDto): Promise<Todo> {
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+      return todo;
     }
 
     const order = updateTotallyTodoDto.order
@@ -61,29 +59,22 @@ export class TodosService {
       order: order as number,
     })
     if(todoByOrder !== null){
-      throw new HttpException('Conflict', HttpStatus.CONFLICT);
+      return todoByOrder;
     }
     this.todoRepository.update(id, updateTotallyTodoDto);
   }
 
-  async remove(id: string): Promise<void> {
-    const deleteResult = await this.todoRepository.delete(id);
-    if(deleteResult.affected !== 1){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
+  async remove(id: string): Promise<DeleteResult> {
+    return await this.todoRepository.delete(id);
   }
 
   async deleteByCompleted(completed: string) {
-    
     if (completed === undefined || completed.toLowerCase() === "false"){
       const getAllRecords = await this.getAllRecordsDesc()
       this.todoRepository.remove(getAllRecords)
     }
     else if(completed.toLowerCase() === "true"){
       this.todoRepository.delete({completed: true})
-    }
-    else{
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
   }
 

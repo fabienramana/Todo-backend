@@ -11,6 +11,6 @@ export class Todo {
   @Column()
   title: string;
 
-  @Column()
+  @Column("boolean")
   completed: boolean;
 }
