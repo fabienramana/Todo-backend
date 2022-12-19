@@ -1,13 +1,15 @@
-import { IsNotEmpty } from "class-validator";
+import { Transform, TransformFnParams } from "class-transformer";
+import { IsBoolean, IsNotEmpty, IsNumber } from "class-validator";
 
 export class UpdateTodoDto {
 
     @IsNotEmpty()
+    @Transform(({ value }: TransformFnParams) => value?.trim())
     title: string;
     
-    @IsNotEmpty()
+    @IsBoolean()
     completed: boolean;
 
-    @IsNotEmpty()
+    @IsNumber()
     order: number
 }
