@@ -1,5 +1,5 @@
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
-import { Todo } from "src/todos/entities/todo.entity";
+import { Todo } from "../todos/entities/todo.entity";
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
     type: 'mysql',
