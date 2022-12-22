@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from "@nestjs/typeorm";
+import { getRepositoryToken, InjectRepository } from "@nestjs/typeorm";
 import { DeleteResult, Repository } from "typeorm";
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
@@ -19,7 +19,7 @@ export class TodosService {
     return this.todoRepository.save(todoToSave);
   }
 
-  findAll(): Promise<Todo[]> {
+  async findAll(): Promise<Todo[]> {
     return this.getAllRecordsDesc();
   }
 
@@ -80,26 +80,16 @@ export class TodosService {
 
   async mapTo(createTodoDto: CreateTodoDto): Promise<Todo>{
     let newuuid: string = uuidv4();
-    const lastOrder: number = await this.getLastOrder().then()
+    const max = await this.getMaxOrderRow().then()
 
     const todoToSave: Todo = {
         id: newuuid,
-        order: lastOrder,
+        order: max.max+1,
         title: createTodoDto.title,
         completed: false
     }
 
     return todoToSave;
-  }
-
-  async getLastOrder(): Promise<number>{
-    const allRecordsPromise = this.getAllRecordsDesc()
-    const allRecords: Todo[] =  await allRecordsPromise.then()
-
-    if(allRecords.length === 0){
-      return 1;
-    }
-    return allRecords[0].order+1
   }
 
   getAllRecordsDesc(): Promise<Todo[]> {
@@ -108,5 +98,12 @@ export class TodosService {
           order: "DESC",
       },
   })
+  }
+
+  getMaxOrderRow(){
+    const query = this.todoRepository
+                  .createQueryBuilder("todo")
+                  .select("MAX(todo.order)", "max");
+    return query.getRawOne();
   }
 }
