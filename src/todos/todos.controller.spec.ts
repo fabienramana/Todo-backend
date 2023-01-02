@@ -13,23 +13,14 @@ import { resolve } from 'path';
 describe('TodosController', () => {
   let app: INestApplication;
 
-  let mockTodosService = {
-    findAll: () => {return todos;},
-    create: (createTodoDto: CreateTodoDto) => {},
-    findOne: (id: string) => {},
-    updatePartialy: (id: string, updatePartialTodoDto: UpdatePartialTodoDto) => {
-      return todos[0]
-    },
-    updateTotally: (id: string, updateTotallyTodoDto: UpdateTodoDto) => {
-      return todos[0]
-    },
-    remove: (id: string) => {
-        const deleteResult: DeleteResult = { affected: 1, raw: 1 };
-        return deleteResult
-    },
-    deleteByCompleted: (completed: string) => {
-      return;
-    }
+  const mockTodosService = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    updatePartialy: jest.fn(),
+    updateTotally: jest.fn(),
+    remove: jest.fn(),
+    deleteByCompleted: jest.fn()
   } 
 
 
@@ -64,12 +55,15 @@ describe('TodosController', () => {
     app.useGlobalPipes(new ValidationPipe())
     await app.init()
   });
-
+ 
   it(`/GET todos`, () => {
+
+    mockTodosService.findAll.mockResolvedValueOnce(todos)
+
     return request(app.getHttpServer())
       .get('/todos')
       .expect(200)
-      .expect(mockTodosService.findAll());
+      .expect(todos);
   });
 
   it('/POST todos/create', () => {
@@ -80,10 +74,10 @@ describe('TodosController', () => {
       title: "Do chores",
       completed: false
     }
-    jest.spyOn(mockTodosService, 'create').mockImplementation(() => todo);
+    mockTodosService.create.mockResolvedValueOnce(todo)
 
     return request(app.getHttpServer())
-      .post('/todos/create')
+      .post('/todos')
       .send(createTodoDto)
       .expect(201)
       .expect(todo);
@@ -96,10 +90,10 @@ describe('TodosController', () => {
       title: "Do chores",
       completed: false
     }
-    jest.spyOn(mockTodosService, 'create').mockImplementation(() => todo);
+    mockTodosService.create.mockResolvedValueOnce(todo)
 
     return request(app.getHttpServer())
-      .post('/todos/create')
+      .post('/todos')
       .send({title:""})
       .expect(400);
   })
@@ -107,7 +101,7 @@ describe('TodosController', () => {
   it('/GET todos/${id} success', () => {
     const id: string = "aaa"
 
-    jest.spyOn(mockTodosService, 'findOne').mockImplementation(() => todos.filter((todo) => todo.id === id)[0]);
+    mockTodosService.findOne.mockResolvedValueOnce(todos.filter((todo) => todo.id === id)[0])
 
     return request(app.getHttpServer())
       .get(`/todos/${id}`)
@@ -118,7 +112,7 @@ describe('TodosController', () => {
   it('/GET todos/${id} not found', () => {
     const id: string = "zzz"
 
-    jest.spyOn(mockTodosService, 'findOne').mockImplementation(() => {return new Promise((resolve, reject) => resolve(null))});
+    mockTodosService.findOne.mockResolvedValueOnce(null)
 
     return request(app.getHttpServer())
       .get(`/todos/${id}`)
@@ -129,7 +123,7 @@ describe('TodosController', () => {
     const id: string = "aaa"
     const body = {title: "Do chores"}
 
-    jest.spyOn(mockTodosService, 'updatePartialy').mockImplementation(() => {return undefined});
+    mockTodosService.updatePartialy.mockResolvedValueOnce(undefined)
 
     return request(app.getHttpServer())
 
@@ -143,7 +137,9 @@ describe('TodosController', () => {
     const id: string = "aaa"
     const body = {title: "Do chores"}
 
-    jest.spyOn(mockTodosService, 'updatePartialy').mockImplementation(() => {return null});
+    mockTodosService.updatePartialy.mockImplementation(() => {
+      throw new Error('Not Found');
+    });
 
     return request(app.getHttpServer())
 
@@ -156,7 +152,9 @@ describe('TodosController', () => {
     const id: string = "aaa"
     const body = {title: "Do chores"}
 
-    jest.spyOn(mockTodosService, 'updatePartialy').mockImplementation(() => {return todos[0]});
+    mockTodosService.updatePartialy.mockImplementation(() => {
+      throw new Error('Conflict');
+    });
 
     return request(app.getHttpServer())
 
@@ -173,7 +171,7 @@ describe('TodosController', () => {
       order:1
     }
 
-    jest.spyOn(mockTodosService, 'updateTotally').mockImplementation(() => {return undefined});
+    mockTodosService.updateTotally.mockResolvedValueOnce(undefined)
 
     return request(app.getHttpServer())
 
@@ -191,7 +189,9 @@ describe('TodosController', () => {
       order:1
     }
 
-    jest.spyOn(mockTodosService, 'updateTotally').mockImplementation(() => {return null});
+    mockTodosService.updateTotally.mockImplementation(() => {
+      throw new Error('Not Found');
+    });
 
     return request(app.getHttpServer())
 
@@ -208,7 +208,9 @@ describe('TodosController', () => {
       order:1
     }
 
-    jest.spyOn(mockTodosService, 'updateTotally').mockImplementation(() => {return todos[0]});
+    mockTodosService.updateTotally.mockImplementation(() => {
+      throw new Error('Conflict');
+    });
 
     return request(app.getHttpServer())
 
@@ -224,7 +226,7 @@ describe('TodosController', () => {
       raw:1
     }
 
-    jest.spyOn(mockTodosService, 'remove').mockImplementation(() => {return deleteResult});
+    mockTodosService.remove.mockResolvedValueOnce(undefined)
 
     return request(app.getHttpServer())
       .delete(`/todos/${id}`)
@@ -234,26 +236,10 @@ describe('TodosController', () => {
 
   it('/DELETE todos/${id} Not found', () => {
     const id: string = "aaa"
-    const deleteResult: DeleteResult = {
-      affected:0,
-      raw:1
-    }
 
-    jest.spyOn(mockTodosService, 'remove').mockImplementation(() => {return deleteResult});
-
-    return request(app.getHttpServer())
-      .delete(`/todos/${id}`)
-      .expect(404);
-  })
-
-  it('/DELETE todos/${id} Not found', () => {
-    const id: string = "aaa"
-    const deleteResult: DeleteResult = {
-      affected:0,
-      raw:1
-    }
-
-    jest.spyOn(mockTodosService, 'remove').mockImplementation(() => {return deleteResult});
+    mockTodosService.remove.mockImplementation(() => {
+      throw new Error('Not Found')
+    })
 
     return request(app.getHttpServer())
       .delete(`/todos/${id}`)
@@ -264,7 +250,7 @@ describe('TodosController', () => {
     const url: string = "/todos?completed=true"
     
 
-    jest.spyOn(mockTodosService, 'deleteByCompleted').mockImplementation(() => {return });
+    mockTodosService.deleteByCompleted.mockImplementation(null)
 
     return request(app.getHttpServer())
       .delete(url)
@@ -275,7 +261,7 @@ describe('TodosController', () => {
     const url: string = "/todos?completed=false"
     
 
-    jest.spyOn(mockTodosService, 'deleteByCompleted').mockImplementation(() => {return });
+    mockTodosService.deleteByCompleted.mockImplementation(null);
 
     return request(app.getHttpServer())
       .delete(url)
@@ -286,12 +272,12 @@ describe('TodosController', () => {
     const url: string = "/todos"
     
 
-    jest.spyOn(mockTodosService, 'deleteByCompleted').mockImplementation(() => {return });
+    mockTodosService.deleteByCompleted.mockImplementation(null);
 
     return request(app.getHttpServer())
       .delete(url)
       .expect(204);
-  })
+  }) 
 
   afterAll(async () => {
     await app.close();

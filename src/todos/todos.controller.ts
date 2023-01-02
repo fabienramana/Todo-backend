@@ -8,7 +8,7 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
-  @Post('create')
+  @Post('')
   @HttpCode(201)
   create(@Body() createTodoDto: CreateTodoDto) {
     return this.todosService.create(createTodoDto)
@@ -30,32 +30,44 @@ export class TodosController {
 
   @Patch(':id')
   async updatePartialy(@Param('id') id: string, @Body() updatePartialTodoDto: UpdatePartialTodoDto) {
-    const todoResponse =  await this.todosService.updatePartialy(id, updatePartialTodoDto);
-    if(todoResponse === null){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    try{
+      return await this.todosService.updatePartialy(id, updatePartialTodoDto);
     }
-    if(todoResponse !== undefined){
-      throw new HttpException('Conflict', HttpStatus.CONFLICT);
+    catch(e){
+      if(e.message === 'Not Found'){
+        throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+      }
+      if(e.message === 'Conflict'){
+        throw new HttpException('Conflict', HttpStatus.CONFLICT);
+      }
     }
   }
 
   @Put(':id')
   async updateTotally(@Param('id') id: string, @Body() updateTotallyTodoDto: UpdateTodoDto){
-    const todoResponse = await this.todosService.updateTotally(id, updateTotallyTodoDto)
-    if(todoResponse === null){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    try{
+      await this.todosService.updateTotally(id, updateTotallyTodoDto)
     }
-    if(todoResponse !== undefined){
-      throw new HttpException('Conflict', HttpStatus.CONFLICT);
+    catch(e){
+      if(e.message === 'Not Found'){
+        throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+      }
+      if(e.message === 'Conflict'){
+        throw new HttpException('Conflict', HttpStatus.CONFLICT);
+      }
     }
   }
 
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id') id: string) {
-    const deleteResult = await this.todosService.remove(id);
-    if(deleteResult.affected !== 1){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    try{
+      return await this.todosService.remove(id);
+    } 
+    catch(e){
+      if(e.message === 'Not Found'){
+        throw new HttpException('Not Found', HttpStatus.NOT_FOUND)
+      }
     }
   }
 
