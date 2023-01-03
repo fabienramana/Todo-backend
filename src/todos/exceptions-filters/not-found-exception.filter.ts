@@ -1,14 +1,9 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { TodoNotFoundError } from '../errors/todo-not-found.error';
 
-export class NotFoundError extends Error {
-    constructor(message='Not Found') {
-        super(message);
-    }
-}
-
-@Catch(NotFoundError)
-export class NotFoundFilter implements ExceptionFilter {
+@Catch(TodoNotFoundError)
+export class TodoNotFoundFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -20,7 +15,7 @@ export class NotFoundFilter implements ExceptionFilter {
         statusCode: 404,
         timestamp: new Date().toISOString(),
         path: request.url,
-        text: 'Data not Found'
+        text: 'Todo not Found'
       });
   }
 }

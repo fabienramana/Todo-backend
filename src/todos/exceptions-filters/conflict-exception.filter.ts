@@ -1,14 +1,9 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { OrderAlreadyExistingError } from '../errors/order-already-existing.error';
 
-export class ConflictError extends Error {
-    constructor(message='Conflict') {
-        super(message);
-    }
-}
-
-@Catch(ConflictError)
-export class ConflictFilter implements ExceptionFilter {
+@Catch(OrderAlreadyExistingError)
+export class OrderAlreadyExistingFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -20,7 +15,7 @@ export class ConflictFilter implements ExceptionFilter {
         statusCode: 409,
         timestamp: new Date().toISOString(),
         path: request.url,
-        text: 'Conflict'
+        text: 'Conflict - Order already exists'
       });
   }
 }

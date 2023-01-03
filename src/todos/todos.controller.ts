@@ -3,11 +3,11 @@ import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
-import { NotFoundFilter } from './exceptions-filters/not-found-exception.filter';
-import { ConflictError, ConflictFilter } from './exceptions-filters/conflict-exception.filter';
+import { TodoNotFoundFilter } from './exceptions-filters/not-found-exception.filter';
+import { OrderAlreadyExistingFilter } from './exceptions-filters/conflict-exception.filter';
 
 @Controller('todos')
-@UseFilters(new NotFoundFilter(), new ConflictFilter())
+@UseFilters(new TodoNotFoundFilter(), new OrderAlreadyExistingFilter())
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 

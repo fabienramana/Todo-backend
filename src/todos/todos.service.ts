@@ -6,8 +6,8 @@ import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { Todo } from './entities/todo.entity';
 import {v4 as uuidv4} from 'uuid';
 import { UpdateTodoDto } from './dto/update-todo.dto';
-import { NotFoundError } from './exceptions-filters/not-found-exception.filter';
-import { ConflictError } from './exceptions-filters/conflict-exception.filter';
+import { TodoNotFoundError } from './errors/todo-not-found.error';
+import { OrderAlreadyExistingError } from './errors/order-already-existing.error';
 
 @Injectable()
 export class TodosService {
@@ -28,7 +28,7 @@ export class TodosService {
   async findOne(id: string): Promise<Todo> {
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new NotFoundError()
+      throw new TodoNotFoundError()
     }
     return todo;
   }
@@ -36,7 +36,7 @@ export class TodosService {
   async updatePartialy(id: string, updatePartialTodoDto: UpdatePartialTodoDto){
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new NotFoundError()
+      throw new TodoNotFoundError()
     }
 
     if("order" in updatePartialTodoDto){
@@ -45,7 +45,7 @@ export class TodosService {
         order: order as number,
       })
       if(todoByOrder !== null){
-        throw new ConflictError()
+        throw new OrderAlreadyExistingError()
       }
     }
 
@@ -56,7 +56,7 @@ export class TodosService {
   async updateTotally(id: string, updateTotallyTodoDto: UpdateTodoDto){
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new NotFoundError()
+      throw new TodoNotFoundError()
     }
 
     const order = updateTotallyTodoDto.order
@@ -64,7 +64,7 @@ export class TodosService {
       order: order as number,
     })
     if(todoByOrder !== null){
-      throw new ConflictError()
+      throw new OrderAlreadyExistingError()
     }
     await this.todoRepository.update(id, updateTotallyTodoDto);
     return this.todoRepository.findOneBy({id})
@@ -73,7 +73,7 @@ export class TodosService {
   async remove(id: string){
     const deleteResult = await this.todoRepository.delete(id);
     if(deleteResult.affected !== 1){
-      throw new NotFoundError()
+      throw new TodoNotFoundError()
     }
   }
 
