@@ -6,9 +6,6 @@ import { Todo } from './entities/todo.entity';
 import { TodosService } from './todos.service';
 import { DeleteResult } from 'typeorm';
 import { CreateTodoDto } from './dto/create-todo.dto';
-import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
-import { UpdateTodoDto } from './dto/update-todo.dto';
-import { resolve } from 'path';
 
 describe('TodosController', () => {
   let app: INestApplication;

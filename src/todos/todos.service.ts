@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { EntityNotFoundError, Repository } from "typeorm";
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { Todo } from './entities/todo.entity';
 import {v4 as uuidv4} from 'uuid';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import { NotFoundError } from './exceptions-filters/not-found-exception.filter';
+import { ConflictError } from './exceptions-filters/conflict-exception.filter';
 
 @Injectable()
 export class TodosService {
@@ -25,13 +27,16 @@ export class TodosService {
 
   async findOne(id: string): Promise<Todo> {
     const todo: Todo =  await this.todoRepository.findOneBy({id});
+    if(todo === null){
+      throw new NotFoundError()
+    }
     return todo;
   }
 
   async updatePartialy(id: string, updatePartialTodoDto: UpdatePartialTodoDto){
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new Error('Not Found')
+      throw new NotFoundError()
     }
 
     if("order" in updatePartialTodoDto){
@@ -40,7 +45,7 @@ export class TodosService {
         order: order as number,
       })
       if(todoByOrder !== null){
-        throw new Error('Conflict');
+        throw new ConflictError()
       }
     }
 
@@ -51,7 +56,7 @@ export class TodosService {
   async updateTotally(id: string, updateTotallyTodoDto: UpdateTodoDto){
     const todo: Todo =  await this.todoRepository.findOneBy({id});
     if(todo === null){
-      throw new Error('Not Found')
+      throw new NotFoundError()
     }
 
     const order = updateTotallyTodoDto.order
@@ -59,7 +64,7 @@ export class TodosService {
       order: order as number,
     })
     if(todoByOrder !== null){
-      throw new Error('Conflict')
+      throw new ConflictError()
     }
     await this.todoRepository.update(id, updateTotallyTodoDto);
     return this.todoRepository.findOneBy({id})
@@ -68,7 +73,7 @@ export class TodosService {
   async remove(id: string){
     const deleteResult = await this.todoRepository.delete(id);
     if(deleteResult.affected !== 1){
-      throw new Error('Not Found');
+      throw new NotFoundError()
     }
   }
 

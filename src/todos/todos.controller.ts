@@ -1,14 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query, Put, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query, Put, HttpException, HttpStatus, UseFilters } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdatePartialTodoDto } from './dto/update-partial-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import { NotFoundFilter } from './exceptions-filters/not-found-exception.filter';
+import { ConflictError, ConflictFilter } from './exceptions-filters/conflict-exception.filter';
 
 @Controller('todos')
+@UseFilters(new NotFoundFilter(), new ConflictFilter())
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
-  @Post('')
+  @Post()
   @HttpCode(201)
   create(@Body() createTodoDto: CreateTodoDto) {
     return this.todosService.create(createTodoDto)
@@ -21,54 +24,23 @@ export class TodosController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const response =  await this.todosService.findOne(id);
-    if(response === null){
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
-    return response;
+    return await this.todosService.findOne(id);
   }
 
   @Patch(':id')
   async updatePartialy(@Param('id') id: string, @Body() updatePartialTodoDto: UpdatePartialTodoDto) {
-    try{
-      return await this.todosService.updatePartialy(id, updatePartialTodoDto);
-    }
-    catch(e){
-      if(e.message === 'Not Found'){
-        throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-      }
-      if(e.message === 'Conflict'){
-        throw new HttpException('Conflict', HttpStatus.CONFLICT);
-      }
-    }
+    return await this.todosService.updatePartialy(id, updatePartialTodoDto);
   }
 
   @Put(':id')
   async updateTotally(@Param('id') id: string, @Body() updateTotallyTodoDto: UpdateTodoDto){
-    try{
-      await this.todosService.updateTotally(id, updateTotallyTodoDto)
-    }
-    catch(e){
-      if(e.message === 'Not Found'){
-        throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-      }
-      if(e.message === 'Conflict'){
-        throw new HttpException('Conflict', HttpStatus.CONFLICT);
-      }
-    }
+    return await this.todosService.updateTotally(id, updateTotallyTodoDto)
   }
 
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id') id: string) {
-    try{
-      return await this.todosService.remove(id);
-    } 
-    catch(e){
-      if(e.message === 'Not Found'){
-        throw new HttpException('Not Found', HttpStatus.NOT_FOUND)
-      }
-    }
+    return await this.todosService.remove(id);
   }
 
   @Delete(':completed?')
