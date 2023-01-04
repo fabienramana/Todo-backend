@@ -46,6 +46,12 @@ export class TodosController {
   @Delete(':completed?')
   @HttpCode(204)
   deleteByCompleted(@Query('completed') completed: string){
-    return this.todosService.deleteByCompleted(completed);
+    if (completed === undefined || completed.toLowerCase() === "false"){
+      return this.todosService.deleteAllTodos();
+    }
+    else if(completed.toLowerCase() === "true"){
+      return this.todosService.deleteTodosCompleted()
+    }
   }
+  
 }

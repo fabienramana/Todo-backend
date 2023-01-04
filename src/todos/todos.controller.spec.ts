@@ -6,6 +6,8 @@ import { Todo } from './entities/todo.entity';
 import { TodosService } from './todos.service';
 import { DeleteResult } from 'typeorm';
 import { CreateTodoDto } from './dto/create-todo.dto';
+import { TodoNotFoundError } from './errors/todo-not-found.error';
+import { OrderAlreadyExistingError } from './errors/order-already-existing.error';
 
 describe('TodosController', () => {
   let app: INestApplication;
@@ -17,7 +19,8 @@ describe('TodosController', () => {
     updatePartialy: jest.fn(),
     updateTotally: jest.fn(),
     remove: jest.fn(),
-    deleteByCompleted: jest.fn()
+    deleteAllTodos: jest.fn(),
+    deleteTodosCompleted: jest.fn()
   } 
 
 
@@ -109,7 +112,9 @@ describe('TodosController', () => {
   it('/GET todos/${id} not found', () => {
     const id: string = "zzz"
 
-    mockTodosService.findOne.mockResolvedValueOnce(null)
+    mockTodosService.findOne.mockImplementation(() => {
+      throw new TodoNotFoundError()
+    });
 
     return request(app.getHttpServer())
       .get(`/todos/${id}`)
@@ -135,7 +140,7 @@ describe('TodosController', () => {
     const body = {title: "Do chores"}
 
     mockTodosService.updatePartialy.mockImplementation(() => {
-      throw new Error('Not Found');
+      throw new TodoNotFoundError();
     });
 
     return request(app.getHttpServer())
@@ -150,7 +155,7 @@ describe('TodosController', () => {
     const body = {title: "Do chores"}
 
     mockTodosService.updatePartialy.mockImplementation(() => {
-      throw new Error('Conflict');
+      throw new OrderAlreadyExistingError();
     });
 
     return request(app.getHttpServer())
@@ -187,7 +192,7 @@ describe('TodosController', () => {
     }
 
     mockTodosService.updateTotally.mockImplementation(() => {
-      throw new Error('Not Found');
+      throw new TodoNotFoundError();
     });
 
     return request(app.getHttpServer())
@@ -206,7 +211,7 @@ describe('TodosController', () => {
     }
 
     mockTodosService.updateTotally.mockImplementation(() => {
-      throw new Error('Conflict');
+      throw new OrderAlreadyExistingError();
     });
 
     return request(app.getHttpServer())
@@ -235,7 +240,7 @@ describe('TodosController', () => {
     const id: string = "aaa"
 
     mockTodosService.remove.mockImplementation(() => {
-      throw new Error('Not Found')
+      throw new TodoNotFoundError()
     })
 
     return request(app.getHttpServer())
@@ -247,7 +252,7 @@ describe('TodosController', () => {
     const url: string = "/todos?completed=true"
     
 
-    mockTodosService.deleteByCompleted.mockImplementation(null)
+    mockTodosService.deleteTodosCompleted.mockImplementation(null)
 
     return request(app.getHttpServer())
       .delete(url)
@@ -258,7 +263,7 @@ describe('TodosController', () => {
     const url: string = "/todos?completed=false"
     
 
-    mockTodosService.deleteByCompleted.mockImplementation(null);
+    mockTodosService.deleteAllTodos.mockImplementation(null);
 
     return request(app.getHttpServer())
       .delete(url)
@@ -269,7 +274,7 @@ describe('TodosController', () => {
     const url: string = "/todos"
     
 
-    mockTodosService.deleteByCompleted.mockImplementation(null);
+    mockTodosService.deleteAllTodos.mockImplementation(null);
 
     return request(app.getHttpServer())
       .delete(url)

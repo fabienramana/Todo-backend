@@ -77,20 +77,18 @@ export class TodosService {
     }
   }
 
-  async deleteByCompleted(completed: string) {
-    console.log(completed)
-    if (completed === undefined || completed.toLowerCase() === "false"){
+  async deleteTodosCompleted() {
+      this.todoRepository.delete({completed: true})
+  }
+
+  async deleteAllTodos() {
       const getAllRecords = await this.getAllRecordsDesc()
       this.todoRepository.remove(getAllRecords)
-    }
-    else if(completed.toLowerCase() === "true"){
-      this.todoRepository.delete({completed: true})
-    }
   }
 
   private async mapTo(createTodoDto: CreateTodoDto): Promise<Todo>{
     const newuuid: string = uuidv4();
-    const max = await this.getMaxOrderRow().then()
+    const max = await this.getMaxOrderRow()
 
     const todoToSave: Todo = {
         id: newuuid,
